@@ -1,0 +1,8 @@
+{
+  "name": "ComePlay Gaming & Sports Platform",
+  "description": "Complete Indian online gaming platform featuring Casino, Aviator, Sports betting, Fantasy cricket, Rummy, PWA app, and full-featured Admin Control Panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
