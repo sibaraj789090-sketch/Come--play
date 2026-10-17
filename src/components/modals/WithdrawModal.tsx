@@ -7,10 +7,10 @@ export const WithdrawModal: React.FC = () => {
 
   const [amount, setAmount] = useState<number>(500);
   const [withdrawType, setWithdrawType] = useState<'UPI' | 'BANK'>('UPI');
-  const [upiId, setUpiId] = useState('');
-  const [bankAcc, setBankAcc] = useState('');
-  const [ifsc, setIfsc] = useState('');
-  const [holderName, setHolderName] = useState('');
+  const [upiId, setUpiId] = useState(currentUser?.savedUpi || (currentUser?.phone ? `${currentUser.phone}@paytm` : ''));
+  const [bankAcc, setBankAcc] = useState(currentUser?.savedBank?.accountNumber || '');
+  const [ifsc, setIfsc] = useState(currentUser?.savedBank?.ifsc || '');
+  const [holderName, setHolderName] = useState(currentUser?.savedBank?.holderName || currentUser?.name || '');
   const [success, setSuccess] = useState(false);
 
   if (!isWithdrawOpen) return null;
@@ -71,6 +71,17 @@ export const WithdrawModal: React.FC = () => {
           <button onClick={closeWithdraw} className="text-gray-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Zero OTP Badge */}
+        <div className="bg-emerald-950/60 border-b border-emerald-500/30 px-4 py-2 flex items-center justify-between text-xs text-emerald-300 font-bold">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Instant Disbursement • No OTP Verification Required</span>
+          </span>
+          <span className="bg-emerald-500/20 text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/40">
+            24/7 LIVE
+          </span>
         </div>
 
         {success ? (

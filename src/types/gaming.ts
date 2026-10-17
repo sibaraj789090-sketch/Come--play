@@ -14,7 +14,9 @@ export type UserRole = 'user' | 'admin';
 
 export interface User {
   id: string;
-  phone: string;
+  phone?: string;
+  email?: string;
+  authProvider?: 'phone' | 'email' | 'google';
   name: string;
   balance: number;
   bonusBalance: number;
@@ -25,6 +27,12 @@ export interface User {
   referredBy?: string;
   totalDeposited: number;
   totalWithdrawn: number;
+  savedUpi?: string;
+  savedBank?: {
+    accountNumber: string;
+    ifsc: string;
+    holderName: string;
+  };
   createdAt: string;
 }
 
@@ -35,6 +43,10 @@ export interface GameItem {
   tag?: 'HOT' | 'NEW' | 'ORIGINALS' | '99% RTP';
   category: GameCategory;
   subCategory?: string;
+  provider?: string;
+  isSlot?: boolean;
+  reels?: 3 | 5;
+  rtp?: string;
   playersCount: number;
   iconType: string;
   accentColor: string;
@@ -120,7 +132,8 @@ export interface Bet {
 export interface Transaction {
   id: string;
   userId: string;
-  userPhone: string;
+  userPhone?: string;
+  userEmail?: string;
   type: 'DEPOSIT' | 'WITHDRAWAL';
   amount: number;
   method: 'UPI_PHONEPE' | 'UPI_GPAY' | 'UPI_PAYTM' | 'BANK_TRANSFER';

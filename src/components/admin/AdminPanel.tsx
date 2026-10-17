@@ -166,7 +166,8 @@ export const AdminPanel: React.FC = () => {
 
   const filteredUsers = allUsers.filter(
     (u) =>
-      u.phone.includes(userSearch) ||
+      (u.phone && u.phone.includes(userSearch)) ||
+      (u.email && u.email.toLowerCase().includes(userSearch.toLowerCase())) ||
       u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
       u.referralCode.toLowerCase().includes(userSearch.toLowerCase())
   );
@@ -589,7 +590,9 @@ export const AdminPanel: React.FC = () => {
                       <div>{user.name}</div>
                       <div className="text-[10px] text-gray-500 font-mono-num">{user.referralCode}</div>
                     </td>
-                    <td className="p-3 font-mono-num text-gray-300">{user.phone}</td>
+                    <td className="p-3 font-mono-num text-gray-300">
+                      {user.phone ? `+91 ${user.phone}` : user.email || '—'}
+                    </td>
                     <td className="p-3 font-mono-num font-bold text-emerald-400">
                       ₹{user.balance.toFixed(2)}
                     </td>

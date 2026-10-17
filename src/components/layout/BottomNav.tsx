@@ -8,6 +8,7 @@ import {
   Home,
   ReceiptText,
   ShieldAlert,
+  Wallet,
 } from 'lucide-react';
 import { GameCategory } from '../../types/gaming';
 
@@ -22,7 +23,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onTabChange,
   onOpenMyBets,
 }) => {
-  const { openReferral, setIsAdminView, isAdminView, userBets } = useGaming();
+  const { openReferral, setIsAdminView, isAdminView, userBets, openWallet, currentUser } = useGaming();
 
   const pendingBetsCount = userBets.filter((b) => b.status === 'PENDING').length;
 
@@ -43,7 +44,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           <span>Home</span>
         </button>
 
-        {/* VIP */}
+        {/* Casino */}
         <button
           onClick={() => {
             setIsAdminView(false);
@@ -54,7 +55,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           }`}
         >
           <Crown className="w-5 h-5 mb-0.5 text-amber-400" />
-          <span>Casino</span>
+          <span>Slots</span>
+        </button>
+
+        {/* User Wallet & Cashout */}
+        <button
+          onClick={openWallet}
+          className="flex flex-col items-center py-1 text-emerald-400 hover:text-emerald-300 transition"
+          title="User Wallet & Withdrawal"
+        >
+          <Wallet className="w-5 h-5 mb-0.5" />
+          <span className="font-bold">
+            {currentUser ? `₹${Math.floor(currentUser.balance)}` : 'Wallet'}
+          </span>
         </button>
 
         {/* Earn (Referral) */}

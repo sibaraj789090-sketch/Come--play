@@ -22,7 +22,10 @@ import { MinesGame } from './components/games/MinesGame';
 import { SevenUpDownGame } from './components/games/SevenUpDownGame';
 import { LimboGame } from './components/games/LimboGame';
 import { RummySimulator } from './components/games/RummySimulator';
+import { SlotMachineGame } from './components/games/SlotMachineGame';
+import { GaneshaFortuneGame } from './components/games/GaneshaFortuneGame';
 import { AuthModal } from './components/modals/AuthModal';
+import { UserWalletModal } from './components/modals/UserWalletModal';
 import { DepositModal } from './components/modals/DepositModal';
 import { WithdrawModal } from './components/modals/WithdrawModal';
 import { ReferralModal } from './components/modals/ReferralModal';
@@ -150,16 +153,51 @@ const MainApp: React.FC = () => {
       />
 
       {/* 8. Playable Game Overlays */}
-      {activeGame === 'aviator' && <AviatorGame />}
-      {(activeGame === 'mines' || activeGame === 'chicken' || activeGame === 'chicken-road-2') && (
+      {(activeGame === 'aviator' || activeGame === 'aviator-pro') && <AviatorGame />}
+      {(activeGame === 'mines' || activeGame === 'mines-star' || activeGame === 'chicken' || activeGame === 'chicken-road-2' || activeGame === 'squid-game') && (
         <MinesGame />
       )}
-      {activeGame === '7up-7down' && <SevenUpDownGame />}
-      {(activeGame === 'limbo' || activeGame === 'dice') && <LimboGame />}
-      {activeGame === 'rummy-sim' && <RummySimulator />}
+      {(activeGame === '7up-7down' || activeGame === '7up-7down-1000x' || activeGame === 'sic-bo') && (
+        <SevenUpDownGame />
+      )}
+      {(activeGame === 'limbo' || activeGame === 'dice' || activeGame === 'twist' || activeGame === 'ballonix' || activeGame === 'go-rush' || activeGame === 'color-prediction') && (
+        <LimboGame />
+      )}
+      {(activeGame === 'rummy-sim' || activeGame === 'teenpatti' || activeGame === 'teen-patti-anime' || activeGame === 'super-andar-bahar') && (
+        <RummySimulator />
+      )}
+      {(activeGame === 'ganesha-fortune' || activeGame === 'ganesha-gold') && (
+        <GaneshaFortuneGame />
+      )}
+      {activeGame &&
+        ![
+          'aviator',
+          'aviator-pro',
+          'mines',
+          'mines-star',
+          'chicken',
+          'chicken-road-2',
+          'squid-game',
+          '7up-7down',
+          '7up-7down-1000x',
+          'sic-bo',
+          'limbo',
+          'dice',
+          'twist',
+          'ballonix',
+          'go-rush',
+          'color-prediction',
+          'rummy-sim',
+          'teenpatti',
+          'teen-patti-anime',
+          'super-andar-bahar',
+          'ganesha-fortune',
+          'ganesha-gold',
+        ].includes(activeGame) && <SlotMachineGame />}
 
       {/* 9. User Dialogs & Modals */}
       <AuthModal />
+      <UserWalletModal />
       <DepositModal />
       <WithdrawModal />
       <ReferralModal />

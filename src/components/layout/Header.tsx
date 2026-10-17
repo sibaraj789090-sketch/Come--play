@@ -13,6 +13,7 @@ import {
   Crown,
   LogOut,
   Wallet,
+  ArrowDownCircle,
 } from 'lucide-react';
 import { GameCategory } from '../../types/gaming';
 
@@ -28,6 +29,8 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
     openAuthModal,
     logout,
     openDeposit,
+    openWithdraw,
+    openWallet,
     openReferral,
     setIsAdminView,
     isAdminView,
@@ -35,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
 
   const navTabs: { id: GameCategory; label: string; icon: React.ReactNode }[] = [
     { id: 'explore', label: 'Explore', icon: <Compass className="w-4 h-4" /> },
-    { id: 'casino', label: 'Casino', icon: <Spade className="w-4 h-4" /> },
+    { id: 'casino', label: 'Casino & Slots', icon: <Spade className="w-4 h-4 text-amber-400" /> },
     { id: 'fantasy', label: 'Fantasy', icon: <Flame className="w-4 h-4" /> },
     { id: 'rummy', label: 'Rummy', icon: <Layers className="w-4 h-4" /> },
     { id: 'sports', label: 'Sports', icon: <Trophy className="w-4 h-4" /> },
@@ -94,31 +97,50 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
 
           {currentUser ? (
             <div className="flex items-center gap-2">
-              {/* Balance pill with Deposit button */}
-              <div className="flex items-center bg-[#151d30] border border-cyan-500/40 rounded-full pl-2.5 pr-1 py-1 shadow-inner">
-                <div className="flex flex-col text-right mr-2 leading-none">
-                  <span className="text-[10px] text-gray-400 font-medium">Cash</span>
-                  <span className="text-xs sm:text-sm font-bold text-white font-mono-num flex items-center gap-0.5">
+              {/* Wallet & Balance Pill */}
+              <button
+                onClick={openWallet}
+                className="flex items-center bg-[#151d30] hover:bg-[#1a253d] border border-cyan-500/40 rounded-full pl-2.5 pr-2 py-1 shadow-inner transition group"
+                title="Open Wallet & Transaction History"
+              >
+                <Wallet className="w-3.5 h-3.5 text-cyan-400 mr-1.5 group-hover:scale-110 transition-transform" />
+                <div className="flex flex-col text-left mr-1 leading-none">
+                  <span className="text-[9px] text-gray-400 font-medium">Wallet</span>
+                  <span className="text-xs sm:text-sm font-bold text-white font-mono-num">
                     ₹{currentUser.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <button
-                  onClick={openDeposit}
-                  className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-full px-2.5 py-1 text-xs flex items-center gap-1 transition shadow-md active:scale-95"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span className="font-bold">Deposit</span>
-                </button>
-              </div>
+              </button>
 
-              {/* User menu */}
-              <div className="flex items-center gap-1">
-                <div
-                  className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white text-xs font-black shadow-md border border-cyan-400/40"
-                  title={currentUser.name}
+              {/* Deposit Quick Button */}
+              <button
+                onClick={openDeposit}
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-lg px-2 sm:px-2.5 py-1 text-xs flex items-center gap-1 transition shadow-md active:scale-95"
+                title="Deposit via UPI"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span className="font-bold hidden sm:inline">Deposit</span>
+              </button>
+
+              {/* Withdraw Quick Button */}
+              <button
+                onClick={openWithdraw}
+                className="bg-slate-800 hover:bg-slate-700 text-cyan-400 hover:text-cyan-300 border border-cyan-500/40 font-black rounded-lg px-2 sm:px-2.5 py-1 text-xs flex items-center gap-1 transition shadow-md active:scale-95"
+                title="Withdraw Cash (No OTP)"
+              >
+                <ArrowDownCircle className="w-3.5 h-3.5" />
+                <span className="font-bold hidden sm:inline">Withdraw</span>
+              </button>
+
+              {/* User menu & Profile */}
+              <div className="flex items-center gap-1 pl-1">
+                <button
+                  onClick={openWallet}
+                  className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center text-white text-xs font-black shadow-md border border-cyan-400/40 hover:ring-2 hover:ring-cyan-400 transition"
+                  title={`${currentUser.name} (${currentUser.phone ? '+91 ' + currentUser.phone : currentUser.email}) - Open Wallet`}
                 >
                   {currentUser.name.slice(0, 2).toUpperCase()}
-                </div>
+                </button>
                 <button
                   onClick={logout}
                   className="text-gray-400 hover:text-rose-400 p-1.5 rounded transition"
@@ -132,10 +154,13 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => openAuthModal('login')}
-                className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-white font-bold rounded-lg text-xs sm:text-sm transition shadow-[0_0_15px_rgba(6,182,212,0.4)] active:scale-95 flex items-center gap-1.5"
+                className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-400 hover:to-sky-500 text-slate-950 font-black rounded-lg text-xs sm:text-sm transition shadow-[0_0_15px_rgba(6,182,212,0.4)] active:scale-95 flex items-center gap-1.5"
               >
                 <UserIcon className="w-3.5 h-3.5" />
-                <span>Login/Register</span>
+                <span>Login / Sign Up</span>
+                <span className="hidden sm:inline text-[9px] bg-slate-900/60 text-cyan-300 px-1 py-0.5 rounded font-mono">
+                  No OTP
+                </span>
               </button>
             </div>
           )}

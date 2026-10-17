@@ -26,8 +26,10 @@ interface GamingContextType {
   // User state
   currentUser: User | null;
   isAdmin: boolean;
-  login: (phone: string, pin: string) => boolean;
-  register: (phone: string, pin: string, referralCode?: string) => boolean;
+  login: (identifier: string, pin?: string) => boolean;
+  register: (identifier: string, pin?: string, referralCode?: string) => boolean;
+  quickGoogleLogin: (email?: string, name?: string) => boolean;
+  updateSavedPaymentDetails: (upiId?: string, bankDetails?: User['savedBank']) => void;
   logout: () => void;
   adminLogin: (pass: string) => boolean;
   adminLogout: () => void;
@@ -70,6 +72,10 @@ interface GamingContextType {
   activeAuthModal: 'login' | 'register' | null;
   openAuthModal: (mode?: 'login' | 'register') => void;
   closeAuthModal: () => void;
+
+  isWalletOpen: boolean;
+  openWallet: () => void;
+  closeWallet: () => void;
 
   isDepositOpen: boolean;
   openDeposit: () => void;
@@ -284,6 +290,7 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   // Modals state
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [activeAuthModal, setActiveAuthModal] = useState<'login' | 'register' | null>(null);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isReferralOpen, setIsReferralOpen] = useState(false);
@@ -356,9 +363,17 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return () => clearInterval(interval);
   }, []);
 
-  // Auth methods
-  const login = (phone: string, pin: string) => {
-    const found = allUsers.find((u) => u.phone === phone);
+  // Auth methods: Support Mobile Number & Gmail with NO OTP verification
+  const login = (identifier: string, _pin?: string) => {
+    const cleanId = identifier.trim().toLowerCase();
+    const isEmail = cleanId.includes('@');
+    
+    // Look up by phone or email
+    const found = allUsers.find((u) => 
+      (isEmail && u.email?.toLowerCase() === cleanId) ||
+      (!isEmail && (u.phone === cleanId || u.phone?.replace(/\D/g, '') === cleanId.replace(/\D/g, '')))
+    );
+
     if (found) {
       if (found.isBanned) {
         showToast('This account is suspended. Contact support.');
@@ -366,48 +381,67 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       }
       setCurrentUser(found);
       setActiveAuthModal(null);
+      showToast(`Welcome back, ${found.name}!`);
       return true;
     }
-    // Auto register for seamless quick demo
+
+    // Auto-create account instantly if not found (No OTP verification needed!)
+    const isDemoLadandas = cleanId === 'ladandas22@gmail.com';
     const newUser: User = {
       id: `usr_${Date.now()}`,
-      phone,
-      name: `User ${phone.slice(-4)}`,
-      balance: 100, // Welcome gift
-      bonusBalance: 110,
+      phone: !isEmail ? cleanId : undefined,
+      email: isEmail ? cleanId : undefined,
+      authProvider: isEmail ? 'email' : 'phone',
+      name: isDemoLadandas ? 'Ladan Das' : isEmail ? cleanId.split('@')[0] : `User ${cleanId.slice(-4)}`,
+      balance: isDemoLadandas ? 2500.0 : 100.0, // Welcome gift
+      bonusBalance: 110.0,
       role: 'user',
       isBanned: false,
-      vipLevel: 1,
-      referralCode: `CP${phone.slice(-4)}`,
-      totalDeposited: 0,
-      totalWithdrawn: 0,
+      vipLevel: 2,
+      referralCode: `CP${(cleanId.slice(-4) || '888').toUpperCase()}`,
+      savedUpi: !isEmail ? `${cleanId}@paytm` : `${cleanId.split('@')[0]}@okaxis`,
+      totalDeposited: isDemoLadandas ? 5000 : 0,
+      totalWithdrawn: isDemoLadandas ? 2000 : 0,
       createdAt: new Date().toISOString().split('T')[0],
     };
+
     setAllUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
     setActiveAuthModal(null);
+    showToast(`Account created instantly! ₹100 welcome bonus added.`);
     return true;
   };
 
-  const register = (phone: string, pin: string, referralCode?: string) => {
-    const existing = allUsers.find((u) => u.phone === phone);
+  const register = (identifier: string, _pin?: string, referralCode?: string) => {
+    const cleanId = identifier.trim().toLowerCase();
+    const isEmail = cleanId.includes('@');
+
+    const existing = allUsers.find((u) =>
+      (isEmail && u.email?.toLowerCase() === cleanId) ||
+      (!isEmail && (u.phone === cleanId || u.phone?.replace(/\D/g, '') === cleanId.replace(/\D/g, '')))
+    );
+
     if (existing) {
       setCurrentUser(existing);
       setActiveAuthModal(null);
+      showToast(`Logged in successfully! Welcome back ${existing.name}`);
       return true;
     }
 
     const newUser: User = {
       id: `usr_${Date.now()}`,
-      phone,
-      name: `Player ${phone.slice(-4)}`,
+      phone: !isEmail ? cleanId : undefined,
+      email: isEmail ? cleanId : undefined,
+      authProvider: isEmail ? 'email' : 'phone',
+      name: isEmail ? cleanId.split('@')[0] : `Player ${cleanId.slice(-4)}`,
       balance: 100, // ₹100 welcome credit
       bonusBalance: referralCode ? adminSettings.referralBonus : 50,
       role: 'user',
       isBanned: false,
       vipLevel: 1,
-      referralCode: `COME${phone.slice(-4)}`,
+      referralCode: `COME${(cleanId.slice(-4) || '999').toUpperCase()}`,
       referredBy: referralCode,
+      savedUpi: !isEmail ? `${cleanId}@paytm` : `${cleanId.split('@')[0]}@okaxis`,
       totalDeposited: 0,
       totalWithdrawn: 0,
       createdAt: new Date().toISOString().split('T')[0],
@@ -416,11 +450,62 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setAllUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
     setActiveAuthModal(null);
+    showToast(`Registered successfully! ₹100 Welcome credit active.`);
     return true;
+  };
+
+  // Instant 1-tap Google / Gmail login (Zero OTP verification)
+  const quickGoogleLogin = (email = 'ladandas22@gmail.com', name?: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = allUsers.find((u) => u.email?.toLowerCase() === cleanEmail);
+
+    if (existing) {
+      setCurrentUser(existing);
+      setActiveAuthModal(null);
+      showToast(`Signed in with Google as ${existing.name}`);
+      return true;
+    }
+
+    const defaultName = name || (cleanEmail.includes('ladandas') ? 'Ladan Das' : cleanEmail.split('@')[0]);
+    const newUser: User = {
+      id: `usr_g_${Date.now()}`,
+      email: cleanEmail,
+      authProvider: 'google',
+      name: defaultName,
+      balance: 1250.0, // Special instant welcome balance
+      bonusBalance: 150.0,
+      role: 'user',
+      isBanned: false,
+      vipLevel: 2,
+      referralCode: `VIP${Math.floor(100 + Math.random() * 900)}`,
+      savedUpi: `${cleanEmail.split('@')[0]}@okaxis`,
+      totalDeposited: 2000,
+      totalWithdrawn: 800,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    setAllUsers((prev) => [...prev, newUser]);
+    setCurrentUser(newUser);
+    setActiveAuthModal(null);
+    showToast(`Google Sign-in successful! Welcome ${newUser.name}`);
+    return true;
+  };
+
+  const updateSavedPaymentDetails = (upiId?: string, bankDetails?: User['savedBank']) => {
+    if (!currentUser) return;
+    const updated = {
+      ...currentUser,
+      savedUpi: upiId !== undefined ? upiId : currentUser.savedUpi,
+      savedBank: bankDetails !== undefined ? bankDetails : currentUser.savedBank,
+    };
+    setCurrentUser(updated);
+    setAllUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    showToast('Saved payment details updated.');
   };
 
   const logout = () => {
     setCurrentUser(null);
+    showToast('Logged out successfully.');
   };
 
   const adminLogin = (pass: string) => {
@@ -562,6 +647,7 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       id: `tx_${Date.now()}`,
       userId: currentUser.id,
       userPhone: currentUser.phone,
+      userEmail: currentUser.email,
       type: 'DEPOSIT',
       amount,
       method,
@@ -572,6 +658,7 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     setTransactions((prev) => [newTx, ...prev]);
     setIsDepositOpen(false);
+    showToast(`Deposit request of ₹${amount} submitted!`);
   };
 
   const submitWithdrawal = (amount: number, upiId: string, bankDetails?: Transaction['bankDetails']): boolean => {
@@ -581,13 +668,21 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       return false;
     }
 
-    // Deduct pending balance immediately
-    updateUserBalance(-amount);
+    // Deduct pending balance immediately & save payment details for future 1-click withdrawals
+    const updatedUser: User = {
+      ...currentUser,
+      balance: Math.max(0, parseFloat((currentUser.balance - amount).toFixed(2))),
+      savedUpi: upiId || currentUser.savedUpi,
+      savedBank: bankDetails || currentUser.savedBank,
+    };
+    setCurrentUser(updatedUser);
+    setAllUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
 
     const newTx: Transaction = {
       id: `tx_${Date.now()}`,
       userId: currentUser.id,
       userPhone: currentUser.phone,
+      userEmail: currentUser.email,
       type: 'WITHDRAWAL',
       amount,
       method: bankDetails ? 'BANK_TRANSFER' : 'UPI_PHONEPE',
@@ -599,6 +694,7 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     setTransactions((prev) => [newTx, ...prev]);
     setIsWithdrawOpen(false);
+    showToast(`Withdrawal of ₹${amount} requested successfully!`);
     return true;
   };
 
@@ -774,6 +870,8 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         isAdmin,
         login,
         register,
+        quickGoogleLogin,
+        updateSavedPaymentDetails,
         logout,
         adminLogin,
         adminLogout,
@@ -803,6 +901,9 @@ export const GamingProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         activeAuthModal,
         openAuthModal: (mode = 'login') => setActiveAuthModal(mode),
         closeAuthModal: () => setActiveAuthModal(null),
+        isWalletOpen,
+        openWallet: () => setIsWalletOpen(true),
+        closeWallet: () => setIsWalletOpen(false),
         isDepositOpen,
         openDeposit: () => setIsDepositOpen(true),
         closeDeposit: () => setIsDepositOpen(false),
